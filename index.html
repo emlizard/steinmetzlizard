@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Core Loss Calculator (Steinmetz Equation)</title>
+  <!-- MathJax for LaTeX-style 수식 렌더링 -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  </script>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f4f6f8;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+    .input-group {
+      margin: 12px 0;
+    }
+    label {
+      display: inline-block;
+      width: 200px;
+      text-align: right;
+      margin-right: 10px;
+      font-weight: 500;
+    }
+    input {
+      width: 120px;
+      padding: 6px;
+      text-align: right;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 24px;
+      font-size: 15px;
+      background: #1abc9c;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .result-box, .formula-box {
+      margin: 24px auto;
+      background: white;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      max-width: 700px;
+      text-align: left;
+    }
+    .result-box h3, .formula-box h3 {
+      margin-top: 0;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 6px;
+      color: #2c3e50;
+    }
+    .result-box p, .formula-box p {
+      margin: 8px 0;
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>코어 손실 계산기<br><small>(Steinmetz 공식)</small></h1>
+
+  <div class="input-group">
+    <label for="freq">주파수 f (kHz):</label>
+    <input type="number" id="freq" value="100" step="1">
+  </div>
+
+  <div class="input-group">
+    <label for="bpk">자속 밀도 B<sub>pk</sub> (mT):</label>
+    <input type="number" id="bpk" value="100" step="1">
+  </div>
+
+  <div class="input-group">
+    <label for="k">Steinmetz 계수 k<br><small>(mW/cm³·kHz<sup>-α</sup>·mT<sup>-β</sup>)</small>:</label>
+    <input type="number" id="k" value="1e-18" step="1e-19">
+  </div>
+
+  <div class="input-group">
+    <label for="alpha">지수 α:</label>
+    <input type="number" id="alpha" value="1.5" step="0.1">
+  </div>
+
+  <div class="input-group">
+    <label for="beta">지수 β:</label>
+    <input type="number" id="beta" value="2.5" step="0.1">
+  </div>
+
+  <div class="input-group">
+    <label for="ve">유효 부피 V<sub>e</sub> (cm³):</label>
+    <input type="number" id="ve" value="5" step="0.1">
+  </div>
+
+  <button onclick="calculateLoss()">계산하기</button>
+
+  <div class="result-box" id="result"></div>
+
+  <div class="formula-box">
+    <h3>사용된 수식</h3>
+    <p><strong>부피당 손실 밀도 \(P_{cv}\):</strong><br>
+      \[
+        P_{cv} = k \; f^{\alpha} \; B_{\mathrm{pk}}^{\beta}
+      \]
+      <br>단위: mW/cm³, 여기서  
+      \(f\) – 주파수 (Hz, 입력 kHz×10³ 변환)  
+      \(B_{\mathrm{pk}}\) – 자속 밀도 (mT)  
+      \(k\) – Steinmetz 계수 (mW/cm³·kHz⁻ᵅ·mT⁻ᵝ)
+    </p>
+    <p><strong>총 코어 손실:</strong><br>
+      \[
+        P_{\text{mW}} = P_{cv} \times V_e
+      \quad,\quad
+        P_{\text{W}} = \frac{P_{\text{mW}}}{1000}
+      \]
+      <br>단위: mW, W
+    </p>
+  </div>
+
+  <script>
+    function calculateLoss() {
+      // 입력값 읽기
+      const f_kHz = parseFloat(document.getElementById('freq').value);
+      const Bm = parseFloat(document.getElementById('bpk').value);
+      const k = parseFloat(document.getElementById('k').value);
+      const alpha = parseFloat(document.getElementById('alpha').value);
+      const beta = parseFloat(document.getElementById('beta').value);
+      const Ve_cc = parseFloat(document.getElementById('ve').value);
+
+      // 단위 변환
+      const f = f_kHz;   // kHz → Hz
+      const B = Bm;            // mT 그대로 사용
+
+      // 부피당 손실 밀도 (mW/cm³)
+      const Pcv = k * Math.pow(f, alpha) * Math.pow(B, beta);
+
+      // 총 손실
+      const P_mW = Pcv * Ve_cc;        
+
+      // 결과 표시
+      document.getElementById('result').innerHTML = `
+        <h3>계산 결과</h3>
+        <p>부피당 손실 밀도 <em>P<sub>cv</sub></em>: <strong>${Pcv.toFixed(4)}</strong> mW/cm³</p>
+        <p>총 코어 손실: <strong>${P_mW.toFixed(2)}</strong> mW  
+        </p>
+      `;
+    }
+  </script>
+
+</body>
+</html>
