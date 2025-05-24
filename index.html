@@ -1,158 +1,222 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>Core Loss Calculator (Steinmetz Equation)</title>
-  <!-- MathJax for LaTeX-style 수식 렌더링 -->
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script id="MathJax-script" async
-    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
-  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Steinmetz Core Loss Calculator</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: #f4f6f8;
-      padding: 20px;
-      text-align: center;
-    }
-    h1 {
-      color: #2c3e50;
-      margin-bottom: 20px;
-    }
-    .input-group {
-      margin: 12px 0;
-    }
-    label {
-      display: inline-block;
-      width: 200px;
-      text-align: right;
-      margin-right: 10px;
-      font-weight: 500;
-    }
-    input {
-      width: 120px;
-      padding: 6px;
-      text-align: right;
-    }
-    button {
-      margin-top: 20px;
-      padding: 10px 24px;
-      font-size: 15px;
-      background: #1abc9c;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .result-box, .formula-box {
-      margin: 24px auto;
-      background: white;
-      padding: 20px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      max-width: 700px;
-      text-align: left;
-    }
-    .result-box h3, .formula-box h3 {
-      margin-top: 0;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 6px;
-      color: #2c3e50;
-    }
-    .result-box p, .formula-box p {
-      margin: 8px 0;
-      font-size: 15px;
-    }
+    body { font-family: Arial; max-width:800px; margin:2rem auto; line-height:1.5; }
+    label{display:block;margin:.5rem 0 .2rem;}
+    input,select,button{width:100%;padding:.5rem;font-size:1rem;margin-bottom:.5rem;}
+    button{margin-top:.5rem;}
+    #result{margin:1rem 0;font-weight:bold;}
+    .hidden{display:none;}
+    #graph{width:100%;height:500px;}
+    #formulas{margin-top:2rem;border-top:1px solid #ccc;padding-top:1rem;}
   </style>
 </head>
 <body>
+  <h1>Steinmetz Core Loss Calculator</h1>
 
-  <h1>코어 손실 계산기<br><small>(Steinmetz 공식)</small></h1>
+  <label>Model Selection:</label>
+  <select id="model">
+    <option value="CSE">Classical (CSE)</option>
+    <option value="MSE">Modified (MSE)</option>
+    <option value="GSE">Generalized (GSE)</option>
+    <option value="iGSE">Improved GSE (iGSE)</option>
+  </select>
 
-  <div class="input-group">
-    <label for="freq">주파수 f (kHz):</label>
-    <input type="number" id="freq" value="100" step="1">
+  <label>Frequency f (kHz):</label>
+  <input type="number" id="f" value="1" step="any">
+  <label>Peak Magnetic Flux Density Bₚₖ (mT):</label>
+  <input type="number" id="Bpk" value="100" step="any">
+  <label>Core Volume Ve (cm³):</label>
+  <input type="number" id="volume" value="100" step="any">
+
+  <div id="params-CSE" class="hidden">
+    <label>k:</label><input type="number" id="k" value="1e-3" step="any">
+    <label>α:</label><input type="number" id="alpha" value="1.6" step="any">
+    <label>β:</label><input type="number" id="beta" value="2.2" step="any">
+  </div>
+  <div id="params-MSE" class="hidden">
+    <label>kₕ:</label><input type="number" id="kh" value="1e-3" step="any">
+    <label>kₑ:</label><input type="number" id="ke" value="1e-6" step="any">
+    <label>α:</label><input type="number" id="alpha2" value="1.6" step="any">
+    <label>β:</label><input type="number" id="beta2" value="2.2" step="any">
+  </div>
+  <div id="params-GSE" class="hidden">
+    <p>Sinusoidal Wave \(B(t)=B_{pk}\sin(2\pi f t)\) Numerical Integration</p>
+    <label>kᵢ:</label><input type="number" id="ki" value="1e-6" step="any">
+    <label>α:</label><input type="number" id="alpha3" value="1.6" step="any">
+    <label>β:</label><input type="number" id="beta3" value="2.2" step="any">
+    <label>Integration Steps:</label><input type="number" id="steps" value="500" step="1">
+  </div>
+  <div id="params-iGSE" class="hidden">
+    <p>iGSE: Time Integration of MSE</p>
+    <label>kₕ:</label><input type="number" id="kh2" value="1e-3" step="any">
+    <label>kₑ:</label><input type="number" id="ke2" value="1e-6" step="any">
+    <label>α:</label><input type="number" id="alpha4" value="1.6" step="any">
+    <label>βₕ:</label><input type="number" id="beta4" value="2.2" step="any">
+    <label>Integration Steps:</label><input type="number" id="steps2" value="500" step="1">
   </div>
 
-  <div class="input-group">
-    <label for="bpk">자속 밀도 B<sub>pk</sub> (mT):</label>
-    <input type="number" id="bpk" value="100" step="1">
-  </div>
+  <button id="computeBtn">P<sub>v</sub> Calculation</button>
+  <div id="result"></div>
 
-  <div class="input-group">
-    <label for="k">Steinmetz 계수 k<br><small>(mW/cm³·kHz<sup>-α</sup>·mT<sup>-β</sup>)</small>:</label>
-    <input type="number" id="k" value="0.00002" step="0.00001">
-  </div>
+  <h3>Graph: Freq.·B Range</h3>
+  <label>Frequency (kHz):</label>
+  <input type="number" id="fMin" value="0.1" step="any">
+  <input type="number" id="fMax" value="100" step="any">
+  <label>Frequency sweeps:</label><input type="number" id="fSteps" value="30">
+  <label>B range (mT):</label>
+  <input type="number" id="BMin" value="10" step="any">
+  <input type="number" id="BMax" value="200" step="any">
+  <label>No. of sweeps:</label><input type="number" id="BSteps" value="30">
+  <button id="plotBtn">Draw a Plot</button>
+  <div id="graph"></div>
 
-  <div class="input-group">
-    <label for="alpha">지수 α:</label>
-    <input type="number" id="alpha" value="1.5" step="0.1">
-  </div>
-
-  <div class="input-group">
-    <label for="beta">지수 β:</label>
-    <input type="number" id="beta" value="2.5" step="0.1">
-  </div>
-
-  <div class="input-group">
-    <label for="ve">유효 부피 V<sub>e</sub> (cm³):</label>
-    <input type="number" id="ve" value="1" step="0.1">
-  </div>
-
-  <button onclick="calculateLoss()">계산하기</button>
-
-  <div class="result-box" id="result"></div>
-
-  <div class="formula-box">
-    <h3>사용된 수식</h3>
-    <p><strong>부피당 손실 밀도 \(P_{cv}\):</strong><br>
-      \[
-        P_{cv} = k \; f^{\alpha} \; B_{\mathrm{pk}}^{\beta}
-      \]
-      <br>단위: mW/cm³, 여기서  
-      \(f\) – 주파수 (Hz, 입력 kHz×10³ 변환)  
-      \(B_{\mathrm{pk}}\) – 자속 밀도 (mT)  
-      \(k\) – Steinmetz 계수 (mW/cm³·kHz⁻ᵅ·mT⁻ᵝ)
-    </p>
-    <p><strong>총 코어 손실:</strong><br>
-      \[
-        P_{\text{mW}} = P_{cv} \times V_e
-      \quad,\quad
-        P_{\text{W}} = \frac{P_{\text{mW}}}{1000}
-      \]
-      <br>단위: mW, W
-    </p>
+  <div id="formulas">
+    <h3>Steinmetz Equations</h3>
+    <p>Classical (CSE):<br>
+       $$P_v = k\,f^{\alpha}\,B_{pk}^{\beta}$$</p>
+    <p>Modified (MSE):<br>
+       $$P_v = k_h\,f^{\alpha}\,B_{pk}^{\beta} + k_e\,f\,B_{pk}^2$$</p>
+    <p>Generalized (GSE):<br>
+       $$P_v = \frac{1}{T}\int_0^T k_i\bigl|\tfrac{dB}{dt}\bigr|^{\alpha}\,|B|^{\beta}\,dt$$</p>
+    <p>Improved GSE (iGSE):<br>
+       $$P_v = \frac{1}{T}\int_0^T\Bigl(k_h|B|^{\beta_H}+k_e f|B|^2\Bigr)\bigl|\tfrac{dB}{dt}\bigr|^{\alpha_H}dt$$</p>
   </div>
 
   <script>
-    function calculateLoss() {
-      // 입력값 읽기
-      const f_kHz = parseFloat(document.getElementById('freq').value);
-      const Bm = parseFloat(document.getElementById('bpk').value);
-      const k = parseFloat(document.getElementById('k').value);
-      const alpha = parseFloat(document.getElementById('alpha').value);
-      const beta = parseFloat(document.getElementById('beta').value);
-      const Ve_cc = parseFloat(document.getElementById('ve').value);
+    // 헬퍼
+    function getValue(id){ return parseFloat(document.getElementById(id).value); }
 
-      // 단위 변환
-      const f = f_kHz;   // kHz → Hz
-      const B = Bm;            // mT 그대로 사용
+    document.addEventListener('DOMContentLoaded', ()=>{
+      const modelEl = document.getElementById('model');
+      const sections = {
+        CSE: 'params-CSE',
+        MSE: 'params-MSE',
+        GSE: 'params-GSE',
+        iGSE:'params-iGSE'
+      };
+      function toggleSections(){
+        for(let key in sections){
+          document.getElementById(sections[key])
+            .classList.toggle('hidden', key !== modelEl.value);
+        }
+      }
+      modelEl.addEventListener('change', toggleSections);
+      toggleSections();
 
-      // 부피당 손실 밀도 (mW/cm³)
-      const Pcv = k * Math.pow(f, alpha) * Math.pow(B, beta);
+      document.getElementById('computeBtn')
+        .addEventListener('click', compute);
+      document.getElementById('plotBtn')
+        .addEventListener('click', plotGraph);
+    });
 
-      // 총 손실
-      const P_mW = Pcv * Ve_cc;        
+    function compute(){
+      const f_kHz = getValue('f');
+      const f = f_kHz;
+      const Bpk_mT = getValue('Bpk');
+      const Bpk = Bpk_mT ;
+      const Vcc = getValue('volume');
+      const T = 1/f;
+      let Pv = 0;
 
-      // 결과 표시
-      document.getElementById('result').innerHTML = `
-        <h3>계산 결과</h3>
-        <p>부피당 손실 밀도 <em>P<sub>cv</sub></em>: <strong>${Pcv.toFixed(4)}</strong> mW/cm³</p>
-        <p>총 코어 손실: <strong>${P_mW.toFixed(2)}</strong> mW  
-        </p>
-      `;
+      const model = document.getElementById('model').value;
+      if(model==='CSE'){
+        const k = getValue('k'), α = getValue('alpha'), β = getValue('beta');
+        Pv = k * Math.pow(f,α) * Math.pow(Bpk,β);
+      }
+      else if(model==='MSE'){
+        const kh = getValue('kh'), ke = getValue('ke'),
+              α = getValue('alpha2'), β = getValue('beta2');
+        Pv = kh*Math.pow(f,α)*Math.pow(Bpk,β)
+           + ke * f * Math.pow(Bpk,2);
+      }
+      else if(model==='GSE'){
+        const ki = getValue('ki'), α = getValue('alpha3'),
+              β = getValue('beta3'), steps = getValue('steps');
+        let sum=0, dt=T/steps;
+        for(let i=0;i<steps;i++){
+          const t=i*dt;
+          const Bt = Bpk*Math.sin(2*Math.PI*f*t);
+          const dBdt = 2*Math.PI*f*Bpk*Math.cos(2*Math.PI*f*t);
+          sum += Math.pow(Math.abs(dBdt),α)*Math.pow(Math.abs(Bt),β)*dt;
+        }
+        Pv = ki/T * sum;
+      }
+      else if(model==='iGSE'){
+        const kh2 = getValue('kh2'), ke2 = getValue('ke2'),
+              α = getValue('alpha4'), βh = getValue('beta4'),
+              steps2 = getValue('steps2');
+        let sum=0, dt=T/steps2;
+        for(let i=0;i<steps2;i++){
+          const t=i*dt;
+          const Bt = Bpk*Math.sin(2*Math.PI*f*t);
+          const dBdt = 2*Math.PI*f*Bpk*Math.cos(2*Math.PI*f*t);
+          const hyst = kh2*Math.pow(Math.abs(dBdt),α)*Math.pow(Math.abs(Bt),βh);
+          const eddy = ke2*Math.pow(Math.abs(dBdt),1)*Math.pow(Math.abs(Bt),2);
+          sum += (hyst+eddy)*dt;
+        }
+        Pv = sum/T;
+      }
+
+      const Pcv = Pv;          // mW/cc
+      const P = Pv * Vcc;      // mW
+
+      document.getElementById('result').innerText =
+        `Pcv = ${Pcv.toFixed(3)} mW/cc (=kW/m³),   P = ${P.toFixed(3)} mW`;
+    }
+
+    function linspace(min,max,n){
+      const arr=[], step=(max-min)/(n-1||1);
+      for(let i=0;i<n;i++) arr.push(min + step*i);
+      return arr;
+    }
+
+    function plotGraph(){
+      const fArr_kHz = linspace(
+        getValue('fMin'),
+        getValue('fMax'),
+        getValue('fSteps')
+      );
+      const BArr_mT = linspace(
+        getValue('BMin'),
+        getValue('BMax'),
+        getValue('BSteps')
+      );
+      const Z = [];
+      // surface는 CSE 기준으로 계산 예시
+      const k = getValue('k'), α = getValue('alpha'), β = getValue('beta');
+      for(let i=0;i<BArr_mT.length;i++){
+        const row=[];
+        for(let j=0;j<fArr_kHz.length;j++){
+          const Pv = k *
+            Math.pow(fArr_kHz[j]*1e3,α) *
+            Math.pow(BArr_mT[i]*1e-3,β);
+          row.push(Pv);
+        }
+        Z.push(row);
+      }
+
+      Plotly.newPlot('graph',[{
+        type:'surface',
+        x: fArr_kHz,
+        y: BArr_mT,
+        z: Z,
+        colorbar:{tickformat:'.1f'}
+      }],{
+        title:'Core Loss Surface (CSE)',
+        scene:{
+          xaxis:{title:'f (kHz)', tickformat:'.0f'},
+          yaxis:{title:'B (mT)',  tickformat:'.0f'},
+          zaxis:{title:'P_v (W/m³)', tickformat:'.0f'}
+        }
+      });
     }
   </script>
-
 </body>
 </html>
