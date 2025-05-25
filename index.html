@@ -182,8 +182,11 @@
       mdl.addEventListener('change',tog); tog();
       document.getElementById('computeBtn').addEventListener('click', compute);
       document.getElementById('plotBtn').addEventListener('click', plotGraph);
-      document.getElementById('exportBtn').addEventListener('click',exportCSV);
-    });
+      document.getElementById('exportBtn')
+        .addEventListener('click', ()=> {
+          if (!lastFArr.length) plotGraph();  // 그래프 데이터가 없으면 먼저 그림
+          exportCSV();
+        });
      function compute(){
       const f_kHz = getValue('f');
       const f = f_kHz;
@@ -279,7 +282,11 @@
       });
       const blob = new Blob([csv],{type:'text/csv'});
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'steinmetz_data.csv'; a.click(); URL.revokeObjectURL(url);
+      const a = document.createElement('a'); 
+      a.href = url; 
+      a.download = 'steinmetz_data.csv'; 
+      a.click(); 
+      URL.revokeObjectURL(url);
     }
   </script>
 </body>
