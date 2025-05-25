@@ -174,14 +174,15 @@
     </div>
   </div>
   <script>
+    let lastFArr = [], lastBArr = [], lastZ = [];
     function getValue(id){ return parseFloat(document.getElementById(id).value); }
-    document.addEventListener('DOMContentLoaded', ()=>{
-      const model = document.getElementById('model');
-      const sects = {CSE:'params-CSE',MSE:'params-MSE',GSE:'params-GSE',iGSE:'params-iGSE'};
-      function toggle(){Object.keys(sects).forEach(k=>document.getElementById(sects[k]).classList.toggle('hidden', k!==model.value));}
-      model.addEventListener('change', toggle); toggle();
+    document.addEventListener('DOMContentLoaded',()=>{
+      const mdl=document.getElementById('model'); const secs={CSE:'params-CSE',MSE:'params-MSE',GSE:'params-GSE',iGSE:'params-iGSE'};
+      function tog(){Object.keys(secs).forEach(k=>document.getElementById(secs[k]).classList.toggle('hidden',k!==mdl.value));}
+      mdl.addEventListener('change',tog); tog();
       document.getElementById('computeBtn').addEventListener('click', compute);
       document.getElementById('plotBtn').addEventListener('click', plotGraph);
+      document.getElementById('exportBtn').addEventListener('click',exportCSV);
     });
      function compute(){
       const f_kHz = getValue('f');
