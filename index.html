@@ -8,18 +8,22 @@
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <style>
     body { font-family: Arial; max-width:400px; margin:2rem auto; line-height:1.5; }
-    label{display:block;margin:.5rem 0 .2rem;}
-    input,select,button{width:100%;padding:.5rem;font-size:1rem;margin-bottom:.5rem;}
-    button{margin-top:.5rem;}
-    #result{margin:1rem 0;font-weight:bold;}
-    .hidden{display:none;}
-    #graph{width:100%;height:400px;}
-    #formulas{margin-top:2rem;border-top:1px solid #ccc;padding-top:1rem;}
+    label { display:block; margin:.5rem 0 .2rem; }
+    input, select, button { width:100%; padding:.5rem; font-size:1rem; margin-bottom:.5rem; }
+    button { margin-top:.5rem; }
+    #result { margin:1rem 0; font-weight:bold; }
+    .hidden { display:none; }
+    #graph { width:100%; height:400px; }
+    #formulas { margin-top:2rem; border-top:1px solid #ccc; padding-top:1rem; }
+    /* New grid for parameters */
+    .param-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+    .param-grid > div { display: flex; flex-direction: column; }
   </style>
 </head>
 <body>
   <h1>Steinmetz Core Loss Calculator</h1>
 
+  <!-- Model Selection -->
   <label>Model Selection:</label>
   <select id="model">
     <option value="CSE">Classical (CSE)</option>
@@ -28,12 +32,21 @@
     <option value="iGSE">Improved GSE (iGSE)</option>
   </select>
 
-  <label>Frequency f (kHz):</label>
-  <input type="number" id="f" value="1" step="any">
-  <label>Peak Magnetic Flux Density Bₚₖ (mT):</label>
-  <input type="number" id="Bpk" value="100" step="any">
-  <label>Core Volume Ve (cm³):</label>
-  <input type="number" id="volume" value="100" step="any">
+  <!-- Grouped Input Parameters -->
+  <div class="param-grid">
+    <div>
+      <label>Frequency f (kHz):</label>
+      <input type="number" id="f" value="1" step="any">
+    </div>
+    <div>
+      <label>Peak Magnetic Flux Density Bₚₖ (mT):</label>
+      <input type="number" id="Bpk" value="100" step="any">
+    </div>
+    <div>
+      <label>Core Volume Ve (cm³):</label>
+      <input type="number" id="volume" value="100" step="any">
+    </div>
+  </div>
 
   <div id="params-CSE" class="hidden">
     <label>k:</label><input type="number" id="k" value="1e-3" step="any">
@@ -90,32 +103,20 @@
   </div>
 
   <script>
-    // 헬퍼
     function getValue(id){ return parseFloat(document.getElementById(id).value); }
-
     document.addEventListener('DOMContentLoaded', ()=>{
       const modelEl = document.getElementById('model');
-      const sections = {
-        CSE: 'params-CSE',
-        MSE: 'params-MSE',
-        GSE: 'params-GSE',
-        iGSE:'params-iGSE'
-      };
+      const sections = { CSE:'params-CSE', MSE:'params-MSE', GSE:'params-GSE', iGSE:'params-iGSE' };
       function toggleSections(){
-        for(let key in sections){
-          document.getElementById(sections[key])
-            .classList.toggle('hidden', key !== modelEl.value);
-        }
+        Object.keys(sections).forEach(key => {
+          document.getElementById(sections[key]).classList.toggle('hidden', key !== modelEl.value);
+        });
       }
       modelEl.addEventListener('change', toggleSections);
       toggleSections();
-
-      document.getElementById('computeBtn')
-        .addEventListener('click', compute);
-      document.getElementById('plotBtn')
-        .addEventListener('click', plotGraph);
+      document.getElementById('computeBtn').addEventListener('click', compute);
+      document.getElementById('plotBtn').addEventListener('click', plotGraph);
     });
-
     function compute(){
       const f_kHz = getValue('f');
       const f = f_kHz;
@@ -168,7 +169,7 @@
       const P = Pv * Vcc;      // mW
 
       document.getElementById('result').innerText =
-        `Pcv = ${Pcv.toFixed(3)} mW/cc (=kW/m³),   P = ${P.toFixed(3)} mW`;
+        Pcv = ${Pcv.toFixed(3)} mW/cc (=kW/m³),   P = ${P.toFixed(3)} mW;
     }
 
     function linspace(min,max,n){
