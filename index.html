@@ -206,8 +206,8 @@
         let sum=0, dt=T/steps;
         for(let i=0;i<steps;i++){
           const t=i*dt;
-          const Bt = Bpk*Math.sin(2*Math.PI*f*1000*t);
-          const dBdt = 2*Math.PI*f*1000*Bpk*Math.cos(2*Math.PI*f*1000*t);
+          const Bt = Bpk*Math.sin(2*Math.PI*f*1000*t)/1000;
+          const dBdt = 2*Math.PI*f*Bpk*Math.cos(2*Math.PI*f*1000*t);
           sum += Math.pow(Math.abs(dBdt),α)*Math.pow(Math.abs(Bt),β)*dt;
         }
         Pv = ki/T * sum *1000;
@@ -219,8 +219,8 @@
         let sum=0, dt=T/steps2;
         for(let i=0;i<steps2;i++){
           const t=i*dt;
-          const Bt = Bpk*Math.sin(2*Math.PI*f*1000*t);
-          const dBdt = 2*Math.PI*f*1000*Bpk*Math.cos(2*Math.PI*f*1000*t);
+          const Bt = Bpk*Math.sin(2*Math.PI*f*1000*t)/1000;
+          const dBdt = 2*Math.PI*f*Bpk*Math.cos(2*Math.PI*f*1000*t);
           const hyst = kh2*Math.pow(Math.abs(dBdt),α)*Math.pow(Math.abs(Bt),βh);
           const eddy = ke2*Math.pow(Math.abs(dBdt),1)*Math.pow(Math.abs(Bt),2);
           sum += (hyst+eddy)*dt;
