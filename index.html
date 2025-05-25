@@ -266,6 +266,17 @@
         yaxis: { title: 'B (mT)',   tickformat: ',.0f' }
       });
     }
+    function exportCSV(){
+      let csv = 'f_kHz,B_mT,Pv_mW\n';
+      lastBArr.forEach((BmT, i) => {
+        lastFArr.forEach((fkHz, j) => {
+          csv += `${fkHz},${BmT},${lastZ[i][j]}\n`;
+        });
+      });
+      const blob = new Blob([csv],{type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'steinmetz_data.csv'; a.click(); URL.revokeObjectURL(url);
+    }
   </script>
 </body>
 </html>
