@@ -231,8 +231,12 @@
       const Pcv = Pv;          // mW/cc
       const P = Pv * Vcc;      // mW
 
+      const fmt = num => num.toLocaleString('en-US', {
+        minimumFractionDigits: 3,
+        maximumFractionDigits: 3
+      });
       document.getElementById('result').innerText =
-        `Pcv = ${Pcv.toFixed(3)} mW/cc (=kW/m³),   P = ${P.toFixed(3)} mW`;
+        `Pcv = ${fmt(Pcv)} mW/cc,   P = ${fmt(P)} mW`;
     }
 
     function linspace(min,max,n){
