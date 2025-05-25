@@ -203,7 +203,7 @@
       else if(model==='GSE'){
         const ki = getValue('ki'), α = getValue('alpha3'),
               β = getValue('beta3'), steps = getValue('steps');
-        let sum=0, dt=T/steps;
+        let sum=0, dt=T/steps/1000;
         for(let i=0;i<steps;i++){
           const t=i*dt;
           const Bt = Bpk*Math.sin(2*Math.PI*f*1000*t)/1000;
@@ -216,7 +216,7 @@
         const kh2 = getValue('kh2'), ke2 = getValue('ke2'),
               α = getValue('alpha4'), βh = getValue('beta4'),
               steps2 = getValue('steps2');
-        let sum=0, dt=T/steps2;
+        let sum=0, dt=T/steps2/1000;
         for(let i=0;i<steps2;i++){
           const t=i*dt;
           const Bt = Bpk*Math.sin(2*Math.PI*f*1000*t)/1000;
