@@ -242,43 +242,24 @@
     }
 
     function plotGraph(){
-      const fArr_kHz = linspace(
-        getValue('fMin'),
-        getValue('fMax'),
-        getValue('fSteps')
-      );
-      const BArr_mT = linspace(
-        getValue('BMin'),
-        getValue('BMax'),
-        getValue('BSteps')
-      );
-      const Z = [];
-      // surface는 CSE 기준으로 계산 예시
-      const k = getValue('k'), α = getValue('alpha'), β = getValue('beta');
-      for(let i=0;i<BArr_mT.length;i++){
-        const row=[];
-        for(let j=0;j<fArr_kHz.length;j++){
-          const Pv = k *
-            Math.pow(fArr_kHz[j]*1e3,α) *
-            Math.pow(BArr_mT[i]*1e-3,β);
-          row.push(Pv);
-        }
-        Z.push(row);
-      }
+      const fArr = linspace(getValue('fMin'), getValue('fMax'), getValue('fSteps'));
+      const BArr = linspace(getValue('BMin'), getValue('BMax'), getValue('BSteps'));
+      const k    = getValue('k'), α = getValue('alpha'), β = getValue('beta');
 
-      Plotly.newPlot('graph',[{
-        type:'surface',
-        x: fArr_kHz,
-        y: BArr_mT,
+      const Z = BArr.map(BmT => 
+        fArr.map(fkHz => k * Math.pow(fkHz, α) * Math.pow(BmT, β))
+      );
+
+      Plotly.newPlot('graph', [{
+        type: 'heatmap',
+        x: fArr,
+        y: BArr,
         z: Z,
-        colorbar:{tickformat:'.1f'}
-      }],{
-        title:'Core Loss Surface (CSE)',
-        scene:{
-          xaxis:{title:'f (kHz)', tickformat:'.0f'},
-          yaxis:{title:'B (mT)',  tickformat:'.0f'},
-          zaxis:{title:'P_v (W/m³)', tickformat:'.0f'}
-        }
+        colorscale: 'Rainbow',
+        colorbar: { title: 'P_v (mW)', tickformat: '.1f' }
+      }], {
+        xaxis: { title: 'f (kHz)', tickformat: '.0f' },
+        yaxis: { title: 'B (mT)',   tickformat: '.0f' }
       });
     }
   </script>
