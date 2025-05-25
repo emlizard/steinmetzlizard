@@ -90,7 +90,7 @@
     <div class="param-grid">
       <div>
         <label for="f">Frequency f (kHz):</label>
-        <input type="number" id="f" value="1" step="any">
+        <input type="number" id="f" value="100" step="any">
       </div>
       <div>
         <label for="Bpk">Peak Flux Bₚₖ (mT):</label>
@@ -98,7 +98,7 @@
       </div>
       <div>
         <label for="volume">Core Volume V (cm³):</label>
-        <input type="number" id="volume" value="100" step="any">
+        <input type="number" id="volume" value="1" step="any">
       </div>
     </div>
 
@@ -206,8 +206,8 @@
         let sum=0, dt=T/steps;
         for(let i=0;i<steps;i++){
           const t=i*dt;
-          const Bt = Bpk*Math.sin(2*Math.PI*f*t);
-          const dBdt = 2*Math.PI*f*Bpk*Math.cos(2*Math.PI*f*t);
+          const Bt = Bpk*Math.sin(2*Math.PI*f*1000*t);
+          const dBdt = 2*Math.PI*f*1000*Bpk*Math.cos(2*Math.PI*f*1000*t);
           sum += Math.pow(Math.abs(dBdt),α)*Math.pow(Math.abs(Bt),β)*dt;
         }
         Pv = ki/T * sum;
@@ -219,8 +219,8 @@
         let sum=0, dt=T/steps2;
         for(let i=0;i<steps2;i++){
           const t=i*dt;
-          const Bt = Bpk*Math.sin(2*Math.PI*f*t);
-          const dBdt = 2*Math.PI*f*Bpk*Math.cos(2*Math.PI*f*t);
+          const Bt = Bpk*Math.sin(2*Math.PI*f*1000*t);
+          const dBdt = 2*Math.PI*f*1000*Bpk*Math.cos(2*Math.PI*f*1000*t);
           const hyst = kh2*Math.pow(Math.abs(dBdt),α)*Math.pow(Math.abs(Bt),βh);
           const eddy = ke2*Math.pow(Math.abs(dBdt),1)*Math.pow(Math.abs(Bt),2);
           sum += (hyst+eddy)*dt;
