@@ -134,14 +134,30 @@
 
     <h3>Graph Range</h3>
     <div class="param-grid">
-      <div><label for="fMin">f Min (kHz):</label><input type="number" id="fMin" value="0.1" step="any"></div>
-      <div><label for="fMax">f Max (kHz):</label><input type="number" id="fMax" value="100" step="any"></div>
-      <div><label for="fSteps"># steps:</label><input type="number" id="fSteps" value="30" step="1"></div>
-    </div><p></p>
-    <div class="param-grid">
-      <div><label for="BMin">B Min (mT):</label><input type="number" id="BMin" value="10" step="any"></div>
-      <div><label for="BMax">B Max (mT):</label><input type="number" id="BMax" value="200" step="any"></div>
-      <div><label for="BSteps"># steps:</label><input type="number" id="BSteps" value="30" step="1"></div>
+      <div>
+        <label for="fMin">f Min (kHz):</label>
+        <input type="number" id="fMin" value="0.1" step="any">
+      </div>
+      <div>
+        <label for="fMax">f Max (kHz):</label>
+        <input type="number" id="fMax" value="100" step="any">
+      </div>
+      <div>
+        <label for="fSteps">f Steps:</label>
+        <input type="number" id="fSteps" value="30" step="1">
+      </div>
+      <div>
+        <label for="BMin">B Min (mT):</label>
+        <input type="number" id="BMin" value="10" step="any">
+      </div>
+      <div>
+        <label for="BMax">B Max (mT):</label>
+        <input type="number" id="BMax" value="200" step="any">
+      </div>
+      <div>
+        <label for="BSteps">B Steps:</label>
+        <input type="number" id="BSteps" value="30" step="1">
+      </div>
     </div>
     <button id="plotBtn">Draw Plot</button>
     <div id="graph"></div>
