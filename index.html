@@ -22,7 +22,6 @@
       font-family: var(--font-stack);
       background: #f9f9f9;
       color: #333;
-      line-height: 1.5;
       display: flex;
       justify-content: center;
     }
@@ -34,45 +33,18 @@
       border-radius: var(--radius);
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-    h1 {
-      font-size: clamp(1.5rem, 5vw, 2.5rem);
-      text-align: center;
-      margin-bottom: var(--gap);
-    }
-    label { font-weight: bold; margin-bottom: .25rem; }
-    input, select, button {
-      width: 100%;
-      padding: 0.5rem;
-      margin-bottom: var(--gap);
-      font-size: 1rem;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-    }
-    button { background: #1abc9c; color: #fff; border: none; cursor: pointer; }
-
-    .param-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: var(--gap);
-      margin-bottom: var(--gap);
-    }
+    h1 { text-align: center; font-size: clamp(1.5rem,5vw,2.5rem); margin-bottom: var(--gap); }
+    label { display: block; font-weight: bold; margin-bottom: .25rem; }
+    input, select, button { width: 100%; padding: .5rem; margin-bottom: var(--gap); border: 1px solid var(--border); border-radius: var(--radius); font-size: 1rem; }
+    .param-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: var(--gap); margin-bottom: var(--gap); }
+    .button-group { display: flex; gap: var(--gap); flex-wrap: wrap; margin-bottom: var(--gap); }
+    .button-group button { flex: 1 1 120px; min-width: 120px; }
     .hidden { display: none; }
-
     #result { font-weight: bold; margin: var(--gap) 0; }
-
     #graph { width: 100%; height: 400px; margin-bottom: var(--gap); }
-
-    #formulas {
-      border-top: 1px solid var(--border);
-      padding-top: var(--gap);
-      margin-top: var(--gap);
-    }
+    #formulas { border-top: 1px solid var(--border); padding-top: var(--gap); margin-top: var(--gap); }
     #formulas h3 { margin-bottom: .5rem; }
-
-    @media (max-width: 480px) {
-      .param-grid { grid-template-columns: 1fr; }
-      h1 { font-size: 1.8rem; }
-    }
+    @media (max-width:480px){ .param-grid, .button-group { flex-direction: column; display:flex; } }
   </style>
 </head>
 <body>
@@ -81,52 +53,42 @@
 
     <label for="model">Model Selection:</label>
     <select id="model">
-      <option value="CSE">Classical (CSE)</option>
+      <option value="CSE" selected>Classical (CSE)</option>
       <option value="MSE">Modified (MSE)</option>
       <option value="GSE">Generalized (GSE)</option>
       <option value="iGSE">Improved GSE (iGSE)</option>
     </select>
 
     <div class="param-grid">
-      <div>
-        <label for="f">Frequency f (kHz):</label>
-        <input type="number" id="f" value="100" step="any">
-      </div>
-      <div>
-        <label for="Bpk">Peak Flux Bₚₖ (mT):</label>
-        <input type="number" id="Bpk" value="100" step="any">
-      </div>
-      <div>
-        <label for="volume">Core Volume V (cm³):</label>
-        <input type="number" id="volume" value="1" step="any">
-      </div>
+      <div><label for="f">Frequency f (kHz):</label><input id="f" type="number" value="1" step="any"></div>
+      <div><label for="Bpk">Bₚₖ (mT):</label><input id="Bpk" type="number" value="100" step="any"></div>
+      <div><label for="volume">Volume Ve (cm³):</label><input id="volume" type="number" value="100" step="any"></div>
     </div>
-
     <div id="params-CSE" class="param-grid">
-      <div><label for="k">k:</label><input type="number" id="k" value="1e-3" step="any"></div>
-      <div><label for="alpha">α:</label><input type="number" id="alpha" value="1.6" step="any"></div>
-      <div><label for="beta">β:</label><input type="number" id="beta" value="2.2" step="any"></div>
+      <div><label for="k">k:</label><input id="k" type="number" value="1e-3" step="any"></div>
+      <div><label for="alpha">α:</label><input id="alpha" type="number" value="1.6" step="any"></div>
+      <div><label for="beta">β:</label><input id="beta" type="number" value="2.2" step="any"></div>
     </div>
     <div id="params-MSE" class="param-grid hidden">
-      <div><label for="kh">kₕ:</label><input type="number" id="kh" value="1e-3" step="any"></div>
-      <div><label for="ke">kₑ:</label><input type="number" id="ke" value="1e-3" step="any"></div>
-      <div><label for="alpha2">α:</label><input type="number" id="alpha2" value="1.6" step="any"></div>
-      <div><label for="beta2">β:</label><input type="number" id="beta2" value="2.2" step="any"></div>
+      <div><label for="kh">kₕ:</label><input id="kh" type="number" value="1e-6" step="any"></div>
+      <div><label for="ke">kₑ:</label><input id="ke" type="number" value="1e-6" step="any"></div>
+      <div><label for="alpha2">α:</label><input id="alpha2" type="number" value="1.6" step="any"></div>
+      <div><label for="beta2">β:</label><input id="beta2" type="number" value="2.2" step="any"></div>
     </div>
     <div id="params-GSE" class="param-grid hidden">
       <div style="grid-column: span 3; margin-bottom:0;"><p>Sinusoidal: \(B(t)=B_{pk}\sin(2\pi f t)\)</p></div>
-      <div><label for="ki">kᵢ:</label><input type="number" id="ki" value="1e-3" step="any"></div>
-      <div><label for="alpha3">α:</label><input type="number" id="alpha3" value="1.6" step="any"></div>
-      <div><label for="beta3">β:</label><input type="number" id="beta3" value="2.2" step="any"></div>
-      <div><label for="steps">Steps:</label><input type="number" id="steps" value="500" step="1"></div>
+      <div><label for="ki">kᵢ:</label><input id="ki" type="number" value="1e-6" step="any"></div>
+      <div><label for="alpha3">α:</label><input id="alpha3" type="number" value="1.6" step="any"></div>
+      <div><label for="beta3">β:</label><input id="beta3" type="number" value="2.2" step="any"></div>
+      <div><label for="steps">Steps:</label><input id="steps" type="number" value="500" step="1"></div>
     </div>
     <div id="params-iGSE" class="param-grid hidden">
       <div style="grid-column: span 3; margin-bottom:0;"><p>iGSE: Time Integration</p></div>
-      <div><label for="kh2">kₕ:</label><input type="number" id="kh2" value="1e-3" step="any"></div>
-      <div><label for="ke2">kₑ:</label><input type="number" id="ke2" value="1e-3" step="any"></div>
-      <div><label for="alpha4">α:</label><input type="number" id="alpha4" value="1.6" step="any"></div>
-      <div><label for="beta4">βₕ:</label><input type="number" id="beta4" value="2.2" step="any"></div>
-      <div><label for="steps2">Steps:</label><input type="number" id="steps2" value="500" step="1"></div>
+      <div><label for="kh2">kₕ:</label><input id="kh2" type="number" value="1e-6" step="any"></div>
+      <div><label for="ke2">kₑ:</label><input id="ke2" type="number" value="1e-6" step="any"></div>
+      <div><label for="alpha4">α:</label><input id="alpha4" type="number" value="1.6" step="any"></div>
+      <div><label for="beta4">βₕ:</label><input id="beta4" type="number" value="2.2" step="any"></div>
+      <div><label for="steps2">Steps:</label><input id="steps2" type="number" value="500" step="1"></div>
     </div>
 
     <button id="computeBtn">Calculate P<sub>v</sub></button>
@@ -134,30 +96,12 @@
 
     <h3>Graph Range</h3>
     <div class="param-grid">
-      <div>
-        <label for="fMin">f Min (kHz):</label>
-        <input type="number" id="fMin" value="0.1" step="any">
-      </div>
-      <div>
-        <label for="fMax">f Max (kHz):</label>
-        <input type="number" id="fMax" value="100" step="any">
-      </div>
-      <div>
-        <label for="fSteps">f Steps:</label>
-        <input type="number" id="fSteps" value="30" step="1">
-      </div>
-      <div>
-        <label for="BMin">B Min (mT):</label>
-        <input type="number" id="BMin" value="10" step="any">
-      </div>
-      <div>
-        <label for="BMax">B Max (mT):</label>
-        <input type="number" id="BMax" value="200" step="any">
-      </div>
-      <div>
-        <label for="BSteps">B Steps:</label>
-        <input type="number" id="BSteps" value="30" step="1">
-      </div>
+      <div><label for="fMin">f Min (kHz):</label><input id="fMin" type="number" value="0.1" step="any"></div>
+      <div><label for="fMax">f Max (kHz):</label><input id="fMax" type="number" value="100" step="any"></div>
+      <div><label for="fSteps">Steps:</label><input id="fSteps" type="number" value="30" step="1"></div>
+      <div><label for="BMin">B Min (mT):</label><input id="BMin" type="number" value="10" step="any"></div>
+      <div><label for="BMax">B Max (mT):</label><input id="BMax" type="number" value="200" step="any"></div>
+      <div><label for="BSteps">Steps:</label><input id="BSteps" type="number" value="30" step="1"></div>
     </div>
     <div class="button-group">
       <button id="plotBtn">Draw Plot</button>
@@ -175,119 +119,28 @@
   </div>
   <script>
     let lastFArr = [], lastBArr = [], lastZ = [];
-    function getValue(id){ return parseFloat(document.getElementById(id).value); }
+    function getValue(id){ return parseFloat(document.getElementById(id).value) }
     document.addEventListener('DOMContentLoaded',()=>{
-      const mdl=document.getElementById('model'); const secs={CSE:'params-CSE',MSE:'params-MSE',GSE:'params-GSE',iGSE:'params-iGSE'};
-      function tog(){Object.keys(secs).forEach(k=>document.getElementById(secs[k]).classList.toggle('hidden',k!==mdl.value));}
-      mdl.addEventListener('change',tog); tog();
-      document.getElementById('computeBtn').addEventListener('click', compute);
-      document.getElementById('plotBtn').addEventListener('click', plotGraph);
-      document.getElementById('exportBtn')
-        .addEventListener('click', ()=> {
-          if (!lastFArr.length) plotGraph();  // 그래프 데이터가 없으면 먼저 그림
-          exportCSV();
-        });
-     function compute(){
-      const f_kHz = getValue('f');
-      const f = f_kHz;
-      const Bpk_mT = getValue('Bpk');
-      const Bpk = Bpk_mT ;
-      const Vcc = getValue('volume');
-      const T = 1/f;
-      let Pv = 0;
-
-      const model = document.getElementById('model').value;
-      if(model==='CSE'){
-        const k = getValue('k'), α = getValue('alpha'), β = getValue('beta');
-        Pv = k * Math.pow(f,α) * Math.pow(Bpk,β);
-      }
-      else if(model==='MSE'){
-        const kh = getValue('kh'), ke = getValue('ke'),
-              α = getValue('alpha2'), β = getValue('beta2');
-        Pv = kh*Math.pow(f,α)*Math.pow(Bpk,β)
-           + ke * f * Math.pow(Bpk,2);
-      }
-      else if(model==='GSE'){
-        const ki = getValue('ki'), α = getValue('alpha3'),
-              β = getValue('beta3'), steps = getValue('steps');
-        let sum=0, dt=T/steps/1000;
-        for(let i=0;i<steps;i++){
-          const t=i*dt;
-          const Bt = Bpk*Math.sin(2*Math.PI*f*1000*t)/1000;
-          const dBdt = 2*Math.PI*f*Bpk*Math.cos(2*Math.PI*f*1000*t);
-          sum += Math.pow(Math.abs(dBdt),α)*Math.pow(Math.abs(Bt),β)*dt;
-        }
-        Pv = ki/T * sum *1000000;
-      }
-      else if(model==='iGSE'){
-        const kh2 = getValue('kh2'), ke2 = getValue('ke2'),
-              α = getValue('alpha4'), βh = getValue('beta4'),
-              steps2 = getValue('steps2');
-        let sum=0, dt=T/steps2/1000;
-        for(let i=0;i<steps2;i++){
-          const t=i*dt;
-          const Bt = Bpk*Math.sin(2*Math.PI*f*1000*t)/1000;
-          const dBdt = 2*Math.PI*f*Bpk*Math.cos(2*Math.PI*f*1000*t);
-          const hyst = kh2*Math.pow(Math.abs(dBdt),α)*Math.pow(Math.abs(Bt),βh);
-          const eddy = ke2*Math.pow(Math.abs(dBdt),1)*Math.pow(Math.abs(Bt),2);
-          sum += (hyst+eddy)*dt;
-        }
-        Pv = sum/T*1000000;
-      }
-
-      const Pcv = Pv;          // mW/cc
-      const P = Pv * Vcc;      // mW
-
-      const fmt = num => num.toLocaleString('en-US', {
-        minimumFractionDigits: 3,
-        maximumFractionDigits: 3
-      });
-      document.getElementById('result').innerText =
-        `Pcv = ${fmt(Pcv)} mW/cc,   P = ${fmt(P)} mW`;
+      const modelEl=document.getElementById('model');
+      const sects={CSE:'params-CSE',MSE:'params-MSE',GSE:'params-GSE',iGSE:'params-iGSE'};
+      function toggle(){Object.keys(sects).forEach(k=>document.getElementById(sects[k]).classList.toggle('hidden',k!==modelEl.value));}
+      modelEl.addEventListener('change',toggle); toggle();
+      document.getElementById('computeBtn').addEventListener('click',compute);
+      document.getElementById('plotBtn').addEventListener('click',plotGraph);
+      document.getElementById('exportBtn').addEventListener('click',()=>{if(!lastFArr.length)plotGraph();exportCSV();});
+    });
+    function compute(){const f=getValue('f'),Bpk=getValue('Bpk'),V=getValue('volume'),T=1/f;let Pv=0,mdl=modelEl.value;
+      if(mdl==='CSE'){const k=getValue('k'),α=getValue('alpha'),β=getValue('beta');Pv=k*Math.pow(f,α)*Math.pow(Bpk,β);} 
+      else if(mdl==='MSE'){const kh=getValue('kh'),ke=getValue('ke'),α=getValue('alpha2'),β=getValue('beta2');Pv=kh*Math.pow(f,α)*Math.pow(Bpk,β)+ke*f*Math.pow(Bpk,2);} 
+      else if(mdl==='GSE'){const ki=getValue('ki'),α=getValue('alpha3'),β=getValue('beta3'),n=getValue('steps');let s=0,dt=T/n;for(let i=0;i<n;i++){const t=i*dt,B=Bpk*Math.sin(2*Math.PI*f*t),d=2*Math.PI*f*Bpk*Math.cos(2*Math.PI*f*t);s+=Math.pow(Math.abs(d),α)*Math.pow(Math.abs(B),β)*dt;}Pv=ki/T*s;} 
+      else{const kh2=getValue('kh2'),ke2=getValue('ke2'),α=getValue('alpha4'),βh=getValue('beta4'),n=getValue('steps2');let s=0,dt=T/n;for(let i=0;i<n;i++){const t=i*dt,B=Bpk*Math.sin(2*Math.PI*f*t),d=2*Math.PI*f*Bpk*Math.cos(2*Math.PI*f*t),h=kh2*Math.pow(Math.abs(d),α)*Math.pow(Math.abs(B),βh),e=ke2*Math.pow(Math.abs(d),1)*Math.pow(Math.abs(B),2);s+=(h+e)*dt;}Pv=s/T;}
+      const Pcv=Pv,Pm=Pv*V;
+      const fmt=n=>n.toLocaleString('en-US',{minimumFractionDigits:3,maximumFractionDigits:3});
+      document.getElementById('result').innerText=`Pcv=${fmt(Pcv)} mW/cc, P=${fmt(Pm)} mW`;
     }
-
-    function linspace(min,max,n){
-      const arr=[], step=(max-min)/(n-1||1);
-      for(let i=0;i<n;i++) arr.push(min + step*i);
-      return arr;
-    }
-
-    function plotGraph(){
-      const fArr = linspace(getValue('fMin'), getValue('fMax'), getValue('fSteps'));
-      const BArr = linspace(getValue('BMin'), getValue('BMax'), getValue('BSteps'));
-      const k    = getValue('k'), α = getValue('alpha'), β = getValue('beta');
-
-      const Z = BArr.map(BmT => 
-        fArr.map(fkHz => k * Math.pow(fkHz, α) * Math.pow(BmT, β))
-      );
-
-      Plotly.newPlot('graph', [{
-        type: 'heatmap',
-        x: fArr,
-        y: BArr,
-        z: Z,
-        colorscale: 'Rainbow',
-        colorbar: { title: 'P_v (mW)', tickformat: ',.0f' }
-      }], {
-        xaxis: { title: 'f (kHz)', tickformat: ',.0f' },
-        yaxis: { title: 'B (mT)',   tickformat: ',.0f' }
-      });
-    }
-    function exportCSV(){
-      let csv = 'f_kHz,B_mT,Pv_mW\n';
-      lastBArr.forEach((BmT, i) => {
-        lastFArr.forEach((fkHz, j) => {
-          csv += `${fkHz},${BmT},${lastZ[i][j]}\n`;
-        });
-      });
-      const blob = new Blob([csv],{type:'text/csv'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); 
-      a.href = url; 
-      a.download = 'steinmetz_data.csv'; 
-      a.click(); 
-      URL.revokeObjectURL(url);
-    }
+    function linspace(min,max,n){const a=[],step=(max-min)/(n-1||1);for(let i=0;i<n;i++)a.push(min+step*i);return a;}
+    function plotGraph(){const fArr=linspace(getValue('fMin'),getValue('fMax'),getValue('fSteps')),BARR=linspace(getValue('BMin'),getValue('BMax'),getValue('BSteps')),k=getValue('k'),α=getValue('alpha'),β=getValue('beta');lastFArr=fArr;lastBArr=BARR;lastZ=BARR.map(B=>fArr.map(fk=>k*Math.pow(fk,α)*Math.pow(B,β)));Plotly.newPlot('graph',[{type:'heatmap',x:fArr,y:BARR,z:lastZ,colorscale:'Rainbow',colorbar:{title:'P_v (mW)',tickformat:',.1f'}}],{xaxis:{title:'f (kHz)',tickformat:',.0f'},yaxis:{title:'B (mT)',tickformat:',.0f'}});}    
+    function exportCSV(){let csv='f_kHz,B_mT,Pv_mW\n';lastBArr.forEach((B,i)=>lastFArr.forEach((f,j)=>{csv+=`${f},${B},${lastZ[i][j]}\n`; }));const blob=new Blob([csv],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='data.csv';a.click();URL.revokeObjectURL(url);}  
   </script>
 </body>
 </html>
