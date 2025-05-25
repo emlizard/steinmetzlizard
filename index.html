@@ -14,6 +14,7 @@
       --border: #ccc;
       --radius: 8px;
       --font-stack: Arial, sans-serif;
+      --accent: #1abc9c;
     }
     *, *::before, *::after { box-sizing: border-box; }
     body {
@@ -36,6 +37,7 @@
     h1 { text-align: center; font-size: clamp(1.5rem,5vw,2.5rem); margin-bottom: var(--gap); }
     label { display: block; font-weight: bold; margin-bottom: .25rem; }
     input, select, button { width: 100%; padding: .5rem; margin-bottom: var(--gap); border: 1px solid var(--border); border-radius: var(--radius); font-size: 1rem; }
+    button { background: var(--accent); color: #fff; border: none; cursor: pointer; }
     .param-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: var(--gap); margin-bottom: var(--gap); }
     .button-group { display: flex; gap: var(--gap); flex-wrap: wrap; margin-bottom: var(--gap); }
     .button-group button { flex: 1 1 120px; min-width: 120px; }
@@ -44,13 +46,12 @@
     #graph { width: 100%; height: 400px; margin-bottom: var(--gap); }
     #formulas { border-top: 1px solid var(--border); padding-top: var(--gap); margin-top: var(--gap); }
     #formulas h3 { margin-bottom: .5rem; }
-    @media (max-width:480px){ .param-grid, .button-group { flex-direction: column; display:flex; } }
+    @media (max-width:480px){ .param-grid, .button-group { display: flex; flex-direction: column; } h1 { font-size:1.8rem; } }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Steinmetz Core Loss Calculator</h1>
-
     <label for="model">Model Selection:</label>
     <select id="model">
       <option value="CSE" selected>Classical (CSE)</option>
@@ -58,11 +59,10 @@
       <option value="GSE">Generalized (GSE)</option>
       <option value="iGSE">Improved GSE (iGSE)</option>
     </select>
-
     <div class="param-grid">
-      <div><label for="f">Frequency f (kHz):</label><input id="f" type="number" value="1" step="any"></div>
-      <div><label for="Bpk">Bₚₖ (mT):</label><input id="Bpk" type="number" value="100" step="any"></div>
-      <div><label for="volume">Volume Ve (cm³):</label><input id="volume" type="number" value="100" step="any"></div>
+      <div><label for="f">Frequency f (kHz):</label><input id="f" type="number" value="100" step="any"></div>
+      <div><label for="Bpk">Peak Flux Bₚₖ (mT):</label><input id="Bpk" type="number" value="100" step="any"></div>
+      <div><label for="volume">Core Volume V (cm³):</label><input id="volume" type="number" value="1" step="any"></div>
     </div>
     <div id="params-CSE" class="param-grid">
       <div><label for="k">k:</label><input id="k" type="number" value="1e-3" step="any"></div>
@@ -70,7 +70,7 @@
       <div><label for="beta">β:</label><input id="beta" type="number" value="2.2" step="any"></div>
     </div>
     <div id="params-MSE" class="param-grid hidden">
-      <div><label for="kh">kₕ:</label><input id="kh" type="number" value="1e-6" step="any"></div>
+      <div><label for="kh">kₕ:</label><input id="kh" type="number" value="1e-3" step="any"></div>
       <div><label for="ke">kₑ:</label><input id="ke" type="number" value="1e-6" step="any"></div>
       <div><label for="alpha2">α:</label><input id="alpha2" type="number" value="1.6" step="any"></div>
       <div><label for="beta2">β:</label><input id="beta2" type="number" value="2.2" step="any"></div>
@@ -80,67 +80,85 @@
       <div><label for="ki">kᵢ:</label><input id="ki" type="number" value="1e-6" step="any"></div>
       <div><label for="alpha3">α:</label><input id="alpha3" type="number" value="1.6" step="any"></div>
       <div><label for="beta3">β:</label><input id="beta3" type="number" value="2.2" step="any"></div>
-      <div><label for="steps">Steps:</label><input id="steps" type="number" value="500" step="1"></div>
+      <div><label for="steps">Integration Steps:</label><input id="steps" type="number" value="500" step="1"></div>
     </div>
     <div id="params-iGSE" class="param-grid hidden">
-      <div style="grid-column: span 3; margin-bottom:0;"><p>iGSE: Time Integration</p></div>
-      <div><label for="kh2">kₕ:</label><input id="kh2" type="number" value="1e-6" step="any"></div>
+      <div style="grid-column: span 3; margin-bottom:0;"><p>Improved GSE (iGSE): Time Integration</p></div>
+      <div><label for="kh2">kₕ:</label><input id="kh2" type="number" value="1e-3" step="any"></div>
       <div><label for="ke2">kₑ:</label><input id="ke2" type="number" value="1e-6" step="any"></div>
-      <div><label for="alpha4">α:</label><input id="alpha4" type="number" value="1.6" step="any"></div>
-      <div><label for="beta4">βₕ:</label><input id="beta4" type="number" value="2.2" step="any"></div>
-      <div><label for="steps2">Steps:</label><input id="steps2" type="number" value="500" step="1"></div>
+      <div><label for="alpha4">α_H:</label><input id="alpha4" type="number" value="1.6" step="any"></div>
+      <div><label for="beta4">β_H:</label><input id="beta4" type="number" value="2.2" step="any"></div>
+      <div><label for="steps2">Integration Steps:</label><input id="steps2" type="number" value="500" step="1"></div>
     </div>
-
-    <button id="computeBtn">Calculate P<sub>v</sub></button>
+    <div class="button-group">
+      <button id="computeBtn">Calculate P<sub>v</sub></button>
+    </div>
     <div id="result"></div>
-
     <h3>Graph Range</h3>
     <div class="param-grid">
       <div><label for="fMin">f Min (kHz):</label><input id="fMin" type="number" value="0.1" step="any"></div>
       <div><label for="fMax">f Max (kHz):</label><input id="fMax" type="number" value="100" step="any"></div>
-      <div><label for="fSteps">Steps:</label><input id="fSteps" type="number" value="30" step="1"></div>
+      <div><label for="fSteps">Frequency Steps:</label><input id="fSteps" type="number" value="30" step="1"></div>
       <div><label for="BMin">B Min (mT):</label><input id="BMin" type="number" value="10" step="any"></div>
       <div><label for="BMax">B Max (mT):</label><input id="BMax" type="number" value="200" step="any"></div>
-      <div><label for="BSteps">Steps:</label><input id="BSteps" type="number" value="30" step="1"></div>
+      <div><label for="BSteps">Flux Steps:</label><input id="BSteps" type="number" value="30" step="1"></div>
     </div>
     <div class="button-group">
-      <button id="plotBtn">Draw Plot</button>
+      <button id="plotBtn">Draw 2D Heatmap</button>
       <button id="exportBtn">Download CSV</button>
     </div>
     <div id="graph"></div>
-
     <div id="formulas">
       <h3>Steinmetz Equations</h3>
       <p>Classical (CSE):<br>$$P_v = k\,f^{\alpha}\,B_{pk}^{\beta}$$</p>
       <p>Modified (MSE):<br>$$P_v = k_h\,f^{\alpha}\,B_{pk}^{\beta} + k_e\,f\,B_{pk}^2$$</p>
-      <p>Generalized (GSE):<br>$$P_v = \frac{1}{T}\int_0^T k_i\lvert\tfrac{dB}{dt}\rvert^{\alpha}\lvert B\rvert^{\beta}\,dt$$</p>
-      <p>Improved (iGSE):<br>$$P_v = \frac{1}{T}\int_0^T\Bigl(k_h\lvert B\rvert^{\beta_H}+k_e f\lvert B\rvert^2\Bigr)\lvert\tfrac{dB}{dt}\rvert^{\alpha_H}dt$$</p>
+      <p>Generalized (GSE):<br>$$P_v = \frac{1}{T}\int_0^T k_i\bigl|\tfrac{dB}{dt}\bigr|^{\alpha}\,|B|^{\beta}\,dt$$</p>
+      <p>Improved (iGSE):<br>$$P_v = \frac{1}{T}\int_0^T\Bigl(k_h|B|^{\beta_H}+k_e f|B|^2\Bigr)|\tfrac{dB}{dt}|^{\alpha_H}dt$$</p>
     </div>
   </div>
   <script>
-    let lastFArr = [], lastBArr = [], lastZ = [];
-    function getValue(id){ return parseFloat(document.getElementById(id).value) }
-    document.addEventListener('DOMContentLoaded',()=>{
-      const modelEl=document.getElementById('model');
-      const sects={CSE:'params-CSE',MSE:'params-MSE',GSE:'params-GSE',iGSE:'params-iGSE'};
-      function toggle(){Object.keys(sects).forEach(k=>document.getElementById(sects[k]).classList.toggle('hidden',k!==modelEl.value));}
-      modelEl.addEventListener('change',toggle); toggle();
-      document.getElementById('computeBtn').addEventListener('click',compute);
-      document.getElementById('plotBtn').addEventListener('click',plotGraph);
-      document.getElementById('exportBtn').addEventListener('click',()=>{if(!lastFArr.length)plotGraph();exportCSV();});
-    });
-    function compute(){const f=getValue('f'),Bpk=getValue('Bpk'),V=getValue('volume'),T=1/f;let Pv=0,mdl=modelEl.value;
-      if(mdl==='CSE'){const k=getValue('k'),α=getValue('alpha'),β=getValue('beta');Pv=k*Math.pow(f,α)*Math.pow(Bpk,β);} 
-      else if(mdl==='MSE'){const kh=getValue('kh'),ke=getValue('ke'),α=getValue('alpha2'),β=getValue('beta2');Pv=kh*Math.pow(f,α)*Math.pow(Bpk,β)+ke*f*Math.pow(Bpk,2);} 
-      else if(mdl==='GSE'){const ki=getValue('ki'),α=getValue('alpha3'),β=getValue('beta3'),n=getValue('steps');let s=0,dt=T/n;for(let i=0;i<n;i++){const t=i*dt,B=Bpk*Math.sin(2*Math.PI*f*t),d=2*Math.PI*f*Bpk*Math.cos(2*Math.PI*f*t);s+=Math.pow(Math.abs(d),α)*Math.pow(Math.abs(B),β)*dt;}Pv=ki/T*s;} 
-      else{const kh2=getValue('kh2'),ke2=getValue('ke2'),α=getValue('alpha4'),βh=getValue('beta4'),n=getValue('steps2');let s=0,dt=T/n;for(let i=0;i<n;i++){const t=i*dt,B=Bpk*Math.sin(2*Math.PI*f*t),d=2*Math.PI*f*Bpk*Math.cos(2*Math.PI*f*t),h=kh2*Math.pow(Math.abs(d),α)*Math.pow(Math.abs(B),βh),e=ke2*Math.pow(Math.abs(d),1)*Math.pow(Math.abs(B),2);s+=(h+e)*dt;}Pv=s/T;}
-      const Pcv=Pv,Pm=Pv*V;
-      const fmt=n=>n.toLocaleString('en-US',{minimumFractionDigits:3,maximumFractionDigits:3});
-      document.getElementById('result').innerText=`Pcv=${fmt(Pcv)} mW/cc, P=${fmt(Pm)} mW`;
+    function getValue(id){ return parseFloat(document.getElementById(id).value); }
+    function compute(){
+      const f = getValue('f'), B = getValue('Bpk'), V = getValue('volume');
+      let Pv=0;
+      switch(document.getElementById('model').value){
+        case 'CSE': {
+          const k = getValue('k'), a = getValue('alpha'), b = getValue('beta');
+          Pv = k*Math.pow(f,a)*Math.pow(B,b);
+        } break;
+        case 'MSE': {
+          const kh = getValue('kh'), ke = getValue('ke'), a = getValue('alpha2'), b = getValue('beta2');
+          Pv = kh*Math.pow(f,a)*Math.pow(B,b) + ke*f*Math.pow(B,2);
+        } break;
+        case 'GSE': {
+          const ki = getValue('ki'), a = getValue('alpha3'), b = getValue('beta3'), n = getValue('steps');
+          let sum=0, T=1/f, dt=T/n/1000;
+          for(let i=0;i<n;i++){
+            const t=i*dt;
+            const Bt = B*Math.sin(2*Math.PI*f*1000*t)/1000;
+            const dB = 2*Math.PI*f*B*Math.cos(2*Math.PI*f*1000*t);
+            sum += Math.pow(Math.abs(dB),a)*Math.pow(Math.abs(Bt),b)*dt;
+          }
+          Pv = ki*sum/T*1000000;
+        } break;
+        case 'iGSE': {
+          const kh2 = getValue('kh2'), ke2 = getValue('ke2'), aH=getValue('alpha4'), bH=getValue('beta4'), n=find>getValue('steps2');
+          let sum=0, T=1/f, dt=T/n/1000;
+          for(let i=0;i<n;i++){
+            const t=i*dt;
+            const Bt = B*Math.sin(2*Math.PI*f*1000*t)/1000;
+            const dB = 2*Math.PI*f*B*Math.cos(2*Math.PI*f*1000*t);
+            const hyst = kh2*Math.pow(Math.abs(Bt),bH)*Math.pow(Math.abs(dB),aH);
+            const eddy=ke2*f*Math.pow(Math.abs(Bt),2)*Math.pow(Math.abs(dB),aH);
+            sum += (hyst+eddy)*dt;
+          }
+          Pv = sum/T*1000000;
+        } break;
+      }
+      const fmt = num=>num.toLocaleString('en-US',{minimumFractionDigits:3,maximumFractionDigits:3});
+      document.getElementById('result').innerText = `Pcv = ${fmt(Pv)} mW/cc, P = ${fmt(Pv*V)} mW`;
     }
-    function linspace(min,max,n){const a=[],step=(max-min)/(n-1||1);for(let i=0;i<n;i++)a.push(min+step*i);return a;}
-    function plotGraph(){const fArr=linspace(getValue('fMin'),getValue('fMax'),getValue('fSteps')),BARR=linspace(getValue('BMin'),getValue('BMax'),getValue('BSteps')),k=getValue('k'),α=getValue('alpha'),β=getValue('beta');lastFArr=fArr;lastBArr=BARR;lastZ=BARR.map(B=>fArr.map(fk=>k*Math.pow(fk,α)*Math.pow(B,β)));Plotly.newPlot('graph',[{type:'heatmap',x:fArr,y:BARR,z:lastZ,colorscale:'Rainbow',colorbar:{title:'P_v (mW)',tickformat:',.1f'}}],{xaxis:{title:'f (kHz)',tickformat:',.0f'},yaxis:{title:'B (mT)',tickformat:',.0f'}});}    
-    function exportCSV(){let csv='f_kHz,B_mT,Pv_mW\n';lastBArr.forEach((B,i)=>lastFArr.forEach((f,j)=>{csv+=`${f},${B},${lastZ[i][j]}\n`; }));const blob=new Blob([csv],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='data.csv';a.click();URL.revokeObjectURL(url);}  
+    document.getElementById('computeBtn').addEventListener('click', compute);
   </script>
 </body>
 </html>
