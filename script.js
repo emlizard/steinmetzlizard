@@ -1,88 +1,173 @@
-    function getValue(id){ return parseFloat(document.getElementById(id).value); }
-    document.addEventListener('DOMContentLoaded', ()=>{
-      const modelEl = document.getElementById('model');
-      const sections = {CSE:'params-CSE', MSE:'params-MSE', GSE:'params-GSE', iGSE:'params-iGSE'};
-      function toggleSections(){
-        Object.keys(sections).forEach(key=>{
-          document.getElementById(sections[key])
-            .classList.toggle('hidden', key !== modelEl.value);
-        });
-      }
-      modelEl.addEventListener('change', toggleSections);
-      toggleSections();
+document.addEventListener('DOMContentLoaded', () => {
+    // 코드를 체계적으로 관리하기 위한 App 객체
+    const App = {
+        elements: {
+            modelSelect: document.getElementById('model'),
+            paramGroups: document.querySelectorAll('.param-group'),
+            computeBtn: document.getElementById('computeBtn'),
+            resultDiv: document.getElementById('result'),
+            graphDiv: document.getElementById('graph'),
+            themeToggle: document.getElementById('theme-toggle'),
+        },
 
-      document.getElementById('computeBtn').addEventListener('click', compute);
-      document.getElementById('plotBtn').addEventListener('click', plotGraph);
-    });
+        init() {
+            this.initTheme();
+            this.initEventListeners();
+            this.updateParamVisibility(); // 초기 모델 파라미터 표시
+            this.calculateAndDisplay();   // 페이지 로드 시 초기 계산 및 그래프
+        },
 
-    function compute(){
-      const f   = getValue('f');
-      const Bpk = getValue('Bpk');
-      const Vcc = getValue('volume');
-      const T   = 1 / f;
-      let Pv = 0;
-      const model = document.getElementById('model').value;
+        initTheme() {
+            const sunIcon = `☀️`;
+            const moonIcon = `🌙`;
+            const setTheme = (theme) => {
+                document.body.setAttribute('data-theme', theme);
+                this.elements.themeToggle.innerHTML = theme === 'dark' ? sunIcon : moonIcon;
+                localStorage.setItem('theme', theme);
+                this.drawPlot(); // 테마 변경 시 그래프 다시 그리기
+            };
+            this.elements.themeToggle.addEventListener('click', () => {
+                const currentTheme = document.body.getAttribute('data-theme');
+                setTheme(currentTheme === 'light' ? 'dark' : 'light');
+            });
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            setTheme(savedTheme);
+        },
 
-      if(model === 'CSE'){
-        const k = getValue('k'), α = getValue('alpha'), β = getValue('beta');
-        Pv = k * Math.pow(f, α) * Math.pow(Bpk, β);
-      } else if(model === 'MSE'){
-        const kh = getValue('kh'), ke = getValue('ke'), α = getValue('alpha2'), β = getValue('beta2');
-        Pv = kh * Math.pow(f, α) * Math.pow(Bpk, β) + ke * f * Math.pow(Bpk, 2);
-      } else if(model === 'GSE'){
-        const ki = getValue('ki'), α = getValue('alpha3'), β = getValue('beta3'), n = getValue('steps');
-        let sum = 0, dt = T / n/1000;
-        for(let i=0; i<n; i++){
-          const t = i * dt;
-          const Bt = Bpk * Math.sin(2 * Math.PI * f *1000 * t)/1000;
-          const dB = 2 * Math.PI * f * Bpk * Math.cos(2 * Math.PI * f *1000* t);
-          sum += Math.pow(Math.abs(dB), α) * Math.pow(Math.abs(Bt), β) * dt;
+        initEventListeners() {
+            this.elements.modelSelect.addEventListener('change', this.updateParamVisibility.bind(this));
+            this.elements.computeBtn.addEventListener('click', this.calculateAndDisplay.bind(this));
+        },
+        
+        // [FIX] CSS 클래스 대신 style.display를 사용하여 UI와 일치시킴
+        updateParamVisibility() {
+            const selectedModel = this.elements.modelSelect.value;
+            this.elements.paramGroups.forEach(group => {
+                group.style.display = group.id === `params-${selectedModel}` ? 'block' : 'none';
+            });
+        },
+
+        getValues() {
+            const values = {};
+            // 현재 활성화된 입력 필드와 공통 입력 필드의 모든 값을 가져옴
+            document.querySelectorAll('input[type="number"]').forEach(input => {
+                if (input.offsetParent !== null) { // 화면에 보이는 요소만
+                    values[input.id] = parseFloat(input.value);
+                }
+            });
+            return values;
+        },
+
+        // [FIX] 모든 모델의 계산 로직을 통합한 단일 함수
+        calculatePv(f_kHz, Bpk_mT, model, params) {
+            const f = f_kHz * 1000;   // 주파수: kHz -> Hz
+            const Bpk = Bpk_mT / 1000; // 자속밀도: mT -> T
+            const T = 1 / f;
+
+            try {
+                switch (model) {
+                    case 'CSE':
+                        return params.k * Math.pow(f, params.alpha) * Math.pow(Bpk, params.beta);
+                    case 'MSE':
+                        return params.kh * Math.pow(f, params.alpha2) * Math.pow(Bpk, params.beta2) + params.ke * f * f * Bpk * Bpk;
+                    case 'GSE': {
+                        const ki = params.ki, alpha = params.alpha3, beta = params.beta3;
+                        const n = 500; // Integration steps
+                        const dt = T / n;
+                        let integral = 0;
+                        for (let i = 0; i < n; i++) {
+                            const t = i * dt;
+                            const dB_dt = 2 * Math.PI * f * Bpk * Math.cos(2 * Math.PI * f * t);
+                            const B_t = Bpk * Math.sin(2 * Math.PI * f * t);
+                            // 참고: 원래 GSE는 ΔB를 사용하지만, 여기서는 B(t)를 사용한 변형으로 보임
+                            integral += Math.pow(Math.abs(dB_dt), alpha) * Math.pow(Math.abs(B_t), beta - alpha) * dt;
+                        }
+                        return ki * integral / T;
+                    }
+                    case 'iGSE': {
+                        const kh = params.kh2, ke = params.ke2, alpha = params.alpha4, beta_h = params.beta4;
+                        const n = 500; // Integration steps
+                        const dt = T / n;
+                        let integral = 0;
+                        for(let i=0; i<n; i++){
+                            const t = i * dt;
+                            const B_t = Bpk * Math.sin(2 * Math.PI * f * t);
+                            const dB_dt = 2 * Math.PI * f * Bpk * Math.cos(2 * Math.PI * f * t);
+                            const hyst = kh * Math.pow(Math.abs(B_t), beta_h - alpha);
+                            const eddy = ke * Math.pow(B_t, 2 - alpha);
+                            integral += (hyst + eddy) * Math.pow(Math.abs(dB_dt), alpha) * dt;
+                        }
+                        return integral / T;
+                    }
+                    default: return 0;
+                }
+            } catch (e) {
+                console.error("Calculation Error:", e);
+                return NaN;
+            }
+        },
+        
+        calculateAndDisplay() {
+            const params = this.getValues();
+            const model = this.elements.modelSelect.value;
+            
+            // 단일 포인트 계산
+            const Pv_Wm3 = this.calculatePv(params.f, params.Bpk, model, params);
+            const totalLoss_W = Pv_Wm3 * (params.volume * 1e-6); // cm³ -> m³
+            
+            if (!isNaN(totalLoss_W)) {
+                this.elements.resultDiv.innerHTML = `
+                    <strong>Result:</strong> 
+                    Power Density (Pᵥ): <strong>${(Pv_Wm3 / 1000).toExponential(3)}</strong> kW/m³ | 
+                    Total Loss (Pₗ): <strong>${totalLoss_W.toExponential(3)}</strong> W
+                `;
+            } else {
+                 this.elements.resultDiv.innerHTML = `<strong style="color:var(--error);">Result:</strong> Invalid input or calculation error.`;
+            }
+
+            this.drawPlot(); // 계산 후 그래프 자동 업데이트
+        },
+
+        drawPlot() {
+            const params = this.getValues();
+            const model = this.elements.modelSelect.value;
+            const isDarkMode = document.body.getAttribute('data-theme') === 'dark';
+
+            // 그래프 범위를 합리적인 기본값으로 설정
+            const f_range = Array.from({ length: 30 }, (_, i) => 10 + i * (500 - 10) / 29); // 10 to 500 kHz
+            const B_range = Array.from({ length: 30 }, (_, i) => 10 + i * (300 - 10) / 29); // 10 to 300 mT
+            
+            // [FIX] 현재 선택된 모델로 Z 데이터 계산
+            const z_data = f_range.map(f => 
+                B_range.map(B => {
+                    const pv = this.calculatePv(f, B, model, params);
+                    // 로그 스케일로 변환하여 가시성 향상
+                    return pv > 0 ? Math.log10(pv) : null;
+                })
+            );
+
+            const data = [{
+                z: z_data, x: B_range, y: f_range, type: 'surface',
+                colorscale: isDarkMode ? 'Cividis' : 'Viridis',
+                colorbar: { title: 'log10(W/m³)' }
+            }];
+
+            const layout = {
+                title: 'Core Loss Pᵥ vs. Frequency and Flux Density',
+                scene: {
+                    xaxis: { title: 'Bₚₖ (mT)' },
+                    yaxis: { title: 'Frequency (kHz)' },
+                    zaxis: { title: 'log10(Pᵥ W/m³)' }
+                },
+                paper_bgcolor: isDarkMode ? 'var(--card)' : 'var(--card)',
+                font: { color: 'var(--text-primary)' },
+                margin: { l: 0, r: 0, b: 0, t: 40 }
+            };
+
+            Plotly.newPlot(this.elements.graphDiv, data, layout, {responsive: true});
         }
-        Pv = ki / T * sum*1000000;
-      } else {
-        const kh2 = getValue('kh2'), ke2 = getValue('ke2'), α = getValue('alpha4'), βh = getValue('beta4'), n = getValue('steps2');
-        let sum = 0, dt = T / n/1000;
-        for(let i=0; i<n; i++){
-          const t = i * dt;
-          const Bt = Bpk * Math.sin(2 * Math.PI * f *1000 * t)/1000;
-          const dB = 2 * Math.PI * f * Bpk * Math.cos(2 * Math.PI * f *1000 * t);
-          const hyst = kh2 * Math.pow(Math.abs(dB), α) * Math.pow(Math.abs(Bt), βh);
-          const eddy = ke2 * Math.pow(Math.abs(dB), 1) * Math.pow(Math.abs(Bt), 2);
-          sum += (hyst + eddy) * dt;
-        }
-        Pv = sum / T*1000000;
-      }
+    };
 
-      const Pcv = Pv;          // mW/cc
-      const P   = Pv * Vcc;    // mW
-      document.getElementById('result').innerText =
-        `Pcv = ${Pcv.toFixed(3)} mW/cc,   P = ${P.toFixed(3)} mW`;
-    }
+    App.init();
+});
 
-    function linspace(min, max, n){
-      const arr = [], step = (max - min) / (n - 1 || 1);
-      for(let i = 0; i < n; i++) arr.push(min + step * i);
-      return arr;
-    }
-
-    function plotGraph(){
-      const fArr = linspace(getValue('fMin'), getValue('fMax'), getValue('fSteps'));
-      const BArr = linspace(getValue('BMin'), getValue('BMax'), getValue('BSteps'));
-      const k    = getValue('k'), α = getValue('alpha'), β = getValue('beta');
-
-      const Z = BArr.map(BmT => 
-        fArr.map(fkHz => k * Math.pow(fkHz, α) * Math.pow(BmT, β))
-      );
-
-      Plotly.newPlot('graph', [{
-        type: 'heatmap',
-        x: fArr,
-        y: BArr,
-        z: Z,
-        colorscale: 'Rainbow',
-        colorbar: { title: 'P_v (mW)', tickformat: ',.0f' }
-      }], {
-        xaxis: { title: 'f (kHz)', tickformat: ',.0f' },
-        yaxis: { title: 'B (mT)',   tickformat: ',.0f' }
-      });
-    }
