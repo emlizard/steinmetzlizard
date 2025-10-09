@@ -1,118 +1,121 @@
 <!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<html lang="ko"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Steinmetz Core Loss Calculator</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <script id="MathJax-script" async="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-</head>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+    
+<link rel="stylesheet" href="style.css"></head>
 <body data-theme="light">
+
 <header class="header">
     <div class="header-content">
-      <div class="logo-section">
-        <a href="https://emlizard.github.io/main-page/" class="back-btn">
-          <i class="fas fa-arrow-left"></i>
-          Back to Calculators
-        </a>
-        <div class="page-title">⚡ Steinmetz Core Loss Calculator</div>
-      </div>
-      <button class="theme-toggle" onclick="toggleTheme()">
-        <i class="fas fa-moon" id="themeIcon"></i>
-      </button>
+        <div class="logo-section">
+            <a href="https://emlizard.github.io/main-page/" class="back-btn">
+                ← Back to Calculators
+            </a>
+            <div class="page-title">⚡ Steinmetz Core Loss Calculator</div>
+        </div>
+        <button class="theme-toggle" id="theme-toggle"></button>
     </div>
-  </header>
+</header>
 
-    <main class="container">
-        <div class="grid grid-2">
-            <!-- Left Column: Inputs & Parameters -->
-            <div class="card animate-in">
-                <h2 class="card-title"><span class="card-icon">⚙️</span>Parameters</h2>
-                <div class="input-group">
-                    <label for="model" class="input-label">Model Selection</label>
-                    <select id="model" class="input-field">
-                        <option value="CSE" selected>Classical (CSE)</option>
-                        <option value="MSE">Modified (MSE)</option>
-                        <option value="GSE">Generalized (GSE)</option>
-                        <option value="iGSE">Improved GSE (iGSE)</option>
-                    </select>
-                </div>
-
-                <!-- General Parameters -->
-                <div class="grid grid-3" style="gap: 1rem;">
-                    <div class="input-group">
-                        <label for="f" class="input-label">Freq f (kHz)</label>
-                        <input type="number" id="f" value="100" step="any" class="input-field">
-                    </div>
-                    <div class="input-group">
-                        <label for="Bpk" class="input-label">Bₚₖ (mT)</label>
-                        <input type="number" id="Bpk" value="100" step="any" class="input-field">
-                    </div>
-                     <div class="input-group">
-                        <label for="volume" class="input-label">Volume V (cm³)</label>
-                        <input type="number" id="volume" value="10" step="any" class="input-field">
-                    </div>
-                </div>
-                
-                <!-- Model-Specific Parameters -->
-                <div id="params-container">
-                    <div id="params-CSE" class="param-group">
-                        <div class="grid grid-3" style="gap: 1rem;">
-                            <div class="input-group"><label for="k" class="input-label">k</label><input type="number" id="k" value="0.0013" step="any" class="input-field"></div>
-                            <div class="input-group"><label for="alpha" class="input-label">α</label><input type="number" id="alpha" value="1.6" step="any" class="input-field"></div>
-                            <div class="input-group"><label for="beta" class="input-label">β</label><input type="number" id="beta" value="2.5" step="any" class="input-field"></div>
-                        </div>
-                    </div>
-                    <div id="params-MSE" class="param-group" style="display:none;">
-                        <div class="grid grid-2" style="gap: 1rem;">
-                            <div class="input-group"><label for="kh" class="input-label">kₕ</label><input type="number" id="kh" value="0.001" step="any" class="input-field"></div>
-                            <div class="input-group"><label for="ke" class="input-label">kₑ</label><input type="number" id="ke" value="1e-6" step="any" class="input-field"></div>
-                            <div class="input-group"><label for="alpha2" class="input-label">α</label><input type="number" id="alpha2" value="1.6" step="any" class="input-field"></div>
-                            <div class="input-group"><label for="beta2" class="input-label">β</label><input type="number" id="beta2" value="2.2" step="any" class="input-field"></div>
-                        </div>
-                    </div>
-                    <div id="params-GSE" class="param-group" style="display:none;">
-                        <div class="grid grid-3" style="gap: 1rem;">
-                           <div class="input-group"><label for="ki" class="input-label">kᵢ</label><input type="number" id="ki" value="1.5e-9" step="any" class="input-field"></div>
-                           <div class="input-group"><label for="alpha3" class="input-label">α</label><input type="number" id="alpha3" value="1.7" step="any" class="input-field"></div>
-                           <div class="input-group"><label for="beta3" class="input-label">β</label><input type="number" id="beta3" value="1.8" step="any" class="input-field"></div>
-                        </div>
-                    </div>
-                    <div id="params-iGSE" class="param-group" style="display:none;">
-                         <div class="grid grid-2" style="gap: 1rem;">
-                           <div class="input-group"><label for="kh2" class="input-label">kₕ</label><input type="number" id="kh2" value="1e-6" step="any" class="input-field"></div>
-                           <div class="input-group"><label for="ke2" class="input-label">kₑ</label><input type="number" id="ke2" value="1e-6" step="any" class="input-field"></div>
-                           <div class="input-group"><label for="alpha4" class="input-label">α</label><input type="number" id="alpha4" value="1.6" step="any" class="input-field"></div>
-                           <div class="input-group"><label for="beta4" class="input-label">βₕ</label><input type="number" id="beta4" value="2.2" step="any" class="input-field"></div>
-                        </div>
-                    </div>
-                </div>
-                 <button id="computeBtn" class="btn btn-full" style="margin-top: 1rem;">Calculate Core Loss</button>
-                 <div id="result" class="result-display" style="margin-top: 1.5rem;"></div>
+<main class="container">
+    <div class="grid grid-2">
+        <div class="card animate-in">
+            <h2 class="card-title"><span class="card-icon">⚙️</span>Parameters</h2>
+            <div class="input-group">
+                <label for="model" class="input-label">Model Selection</label>
+                <select id="model" class="input-field">
+                    <option value="CSE" selected="">Classical (CSE)</option>
+                    <option value="MSE">Modified (MSE)</option>
+                    <option value="GSE">Generalized (GSE)</option>
+                    <option value="iGSE">Improved GSE (iGSE)</option>
+                </select>
             </div>
 
-            <!-- Right Column: Graph & Formulas -->
-            <div>
-                <div class="card animate-in">
-                    <h2 class="card-title"><span class="card-icon">📈</span>Graph</h2>
-                    <div id="graph"></div>
+            <div class="grid grid-3">
+                <div class="input-group">
+                    <label for="f" class="input-label">Freq f (kHz)</label>
+                    <input type="number" id="f" value="100" step="any" class="input-field">
                 </div>
-                 <div class="card animate-in">
-                    <h2 class="card-title"><span class="card-icon">📐</span>Steinmetz Equations</h2>
-                    <div class="formula-math">
-                         <p>$$\small P_v = k\,f^{\alpha}\,B_{pk}^{\beta}$$</p>
-                         <p>$$\small P_v = k_h\,f^{\alpha}\,B_{pk}^{\beta} + k_e\,(f\,B_{pk})^2$$</p>
-                         <p>$$\small P_v = \frac{k_i}{T}\int_0^T \lvert\frac{dB}{dt}\rvert^{\alpha} (\Delta B)^{\beta-\alpha}\,dt$$</p>
+                <div class="input-group">
+                    <label for="Bpk" class="input-label">Bₚₖ (mT)</label>
+                    <input type="number" id="Bpk" value="100" step="any" class="input-field">
+                </div>
+                 <div class="input-group">
+                    <label for="volume" class="input-label">Volume V (cm³)</label>
+                    <input type="number" id="volume" value="10" step="any" class="input-field">
+                </div>
+            </div>
+            
+            <div id="params-container">
+                <div id="params-CSE" class="param-group">
+                    <div class="grid grid-3">
+                        <div class="input-group"><label for="k" class="input-label">k</label><input type="number" id="k" value="0.0013" step="any" class="input-field"></div>
+                        <div class="input-group"><label for="alpha" class="input-label">α</label><input type="number" id="alpha" value="1.6" step="any" class="input-field"></div>
+                        <div class="input-group"><label for="beta" class="input-label">β</label><input type="number" id="beta" value="2.5" step="any" class="input-field"></div>
                     </div>
                 </div>
+                <div id="params-MSE" class="param-group" style="display:none;">
+                    <div class="grid grid-2">
+                        <div class="input-group"><label for="kh" class="input-label">kₕ</label><input type="number" id="kh" value="0.001" step="any" class="input-field"></div>
+                        <div class="input-group"><label for="ke" class="input-label">kₑ</label><input type="number" id="ke" value="1e-6" step="any" class="input-field"></div>
+                        <div class="input-group"><label for="alpha2" class="input-label">α</label><input type="number" id="alpha2" value="1.6" step="any" class="input-field"></div>
+                        <div class="input-group"><label for="beta2" class="input-label">β</label><input type="number" id="beta2" value="2.2" step="any" class="input-field"></div>
+                    </div>
+                </div>
+                <div id="params-GSE" class="param-group" style="display:none;">
+                    <div class="grid grid-3">
+                       <div class="input-group"><label for="ki" class="input-label">kᵢ</label><input type="number" id="ki" value="1.5e-9" step="any" class="input-field"></div>
+                       <div class="input-group"><label for="alpha3" class="input-label">α</label><input type="number" id="alpha3" value="1.7" step="any" class="input-field"></div>
+                       <div class="input-group"><label for="beta3" class="input-label">β</label><input type="number" id="beta3" value="1.8" step="any" class="input-field"></div>
+                    </div>
+                </div>
+                <div id="params-iGSE" class="param-group" style="display:none;">
+                     <div class="grid grid-2">
+                       <div class="input-group"><label for="kh2" class="input-label">kₕ</label><input type="number" id="kh2" value="1e-6" step="any" class="input-field"></div>
+                       <div class="input-group"><label for="ke2" class="input-label">kₑ</label><input type="number" id="ke2" value="1e-6" step="any" class="input-field"></div>
+                       <div class="input-group"><label for="alpha4" class="input-label">α</label><input type="number" id="alpha4" value="1.6" step="any" class="input-field"></div>
+                       <div class="input-group"><label for="beta4" class="input-label">βₕ</label><input type="number" id="beta4" value="2.2" step="any" class="input-field"></div>
+                    </div>
+                </div>
+            </div>
+             <button id="computeBtn" class="btn btn-full" style="margin-top: 1rem;">Calculate Core Loss</button>
+             <div id="result" class="result-display" style="margin-top: 1.5rem;"></div>
+        </div>
+
+        <div class="animate-in" style="animation-delay: 0.1s;">
+            <div class="card">
+                <h2 class="card-title"><span class="card-icon">📈</span>Graph</h2>
+                <div id="graph" style="min-height: 500px;"></div>
             </div>
         </div>
-    </main>
-    <script src="script.js"></script>
-</body>
-</html>
+    </div>
+    
+    <div class="card animate-in" style="animation-delay: 0.2s;">
+        <h2 class="card-title"><span class="card-icon">📐</span>Steinmetz Equations</h2>
+        <div class="formula-math">
+            <h4>Classical (CSE)</h4>
+            <p>$$P_v = k\,f^{\alpha}\,B_{pk}^{\beta}$$</p>
+            <hr>
+            <h4>Modified (MSE)</h4>
+            <p>$$P_v = k_h\,f^{\alpha}\,B_{pk}^{\beta} + k_e\,(f\,B_{pk})^2$$</p>
+            <hr>
+            <h4>Generalized (GSE)</h4>
+            <p>$$P_v = \frac{k_i}{T}\int_0^T \left|\frac{dB}{dt}\right|^{\alpha} (\Delta B)^{\beta-\alpha}\,dt$$</p>
+            <hr>
+            <h4>Improved GSE (iGSE)</h4>
+            <p>$$ P_v = \frac{1}{T} \int_0^T \left( k_h |B(t)|^{\beta_h - \alpha} + k_e |B(t)|^{2-\alpha} \right) \left| \frac{dB}{dt} \right|^\alpha dt $$</p>
+        </div>
+    </div>
+</main>
 
+
+
+
+<script src="script.js"></script></body></html>
