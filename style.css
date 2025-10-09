@@ -207,7 +207,10 @@
           color: white;
           font-size: 1rem;
       }
-
+/* Full-Width Bottom Section: Formulas */
+.container > .card:last-child {
+    margin-top: 2rem; /* 원하는 간격 값 (예: 2rem) */
+}
       .grid {
           display: grid;
           gap: 2rem;
