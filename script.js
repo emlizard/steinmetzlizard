@@ -37,28 +37,33 @@ document.addEventListener('DOMContentLoaded', () => {
         initEventListeners() {
             this.elements.modelSelect.addEventListener('change', this.updateParamVisibility.bind(this));
             this.elements.computeBtn.addEventListener('click', this.calculateAndDisplay.bind(this));
+            // Add event listeners to all inputs to recalculate on change
+            document.querySelectorAll('.input-field').forEach(input => {
+                input.addEventListener('change', this.calculateAndDisplay.bind(this));
+            });
         },
         
-        // [FIX] CSS 클래스 대신 style.display를 사용하여 UI와 일치시킴
         updateParamVisibility() {
             const selectedModel = this.elements.modelSelect.value;
             this.elements.paramGroups.forEach(group => {
                 group.style.display = group.id === `params-${selectedModel}` ? 'block' : 'none';
             });
+            this.calculateAndDisplay(); // Update calculation when model changes
         },
 
         getValues() {
             const values = {};
             // 현재 활성화된 입력 필드와 공통 입력 필드의 모든 값을 가져옴
-            document.querySelectorAll('input[type="number"]').forEach(input => {
-                if (input.offsetParent !== null) { // 화면에 보이는 요소만
-                    values[input.id] = parseFloat(input.value);
+            document.querySelectorAll('input[type="number"], select').forEach(input => {
+                if (input.offsetParent !== null || input.type === 'select-one') { // 화면에 보이는 요소 + select
+                    if (input.type === 'number') {
+                       values[input.id] = parseFloat(input.value);
+                    }
                 }
             });
             return values;
         },
 
-        // [FIX] 모든 모델의 계산 로직을 통합한 단일 함수
         calculatePv(f_kHz, Bpk_mT, model, params) {
             const f = f_kHz * 1000;   // 주파수: kHz -> Hz
             const Bpk = Bpk_mT / 1000; // 자속밀도: mT -> T
@@ -78,9 +83,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         for (let i = 0; i < n; i++) {
                             const t = i * dt;
                             const dB_dt = 2 * Math.PI * f * Bpk * Math.cos(2 * Math.PI * f * t);
-                            const B_t = Bpk * Math.sin(2 * Math.PI * f * t);
-                            // 참고: 원래 GSE는 ΔB를 사용하지만, 여기서는 B(t)를 사용한 변형으로 보임
-                            integral += Math.pow(Math.abs(dB_dt), alpha) * Math.pow(Math.abs(B_t), beta - alpha) * dt;
+                            // Using peak-to-peak flux density (ΔB = 2 * Bpk) as per the standard GSE formula
+                            const deltaB = 2 * Bpk;
+                            integral += Math.pow(Math.abs(dB_dt), alpha) * Math.pow(deltaB, beta - alpha) * dt;
                         }
                         return ki * integral / T;
                     }
@@ -93,8 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             const t = i * dt;
                             const B_t = Bpk * Math.sin(2 * Math.PI * f * t);
                             const dB_dt = 2 * Math.PI * f * Bpk * Math.cos(2 * Math.PI * f * t);
-                            const hyst = kh * Math.pow(Math.abs(B_t), beta_h - alpha);
-                            const eddy = ke * Math.pow(B_t, 2 - alpha);
+                            const hyst = kh * Math.pow(Math.abs(2 * B_t), beta_h - alpha); // Using 2*B(t) as proxy for minor loop ΔB
+                            const eddy = ke * Math.pow(Math.abs(2 * B_t), 2 - alpha);
                             integral += (hyst + eddy) * Math.pow(Math.abs(dB_dt), alpha) * dt;
                         }
                         return integral / T;
@@ -115,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const Pv_Wm3 = this.calculatePv(params.f, params.Bpk, model, params);
             const totalLoss_W = Pv_Wm3 * (params.volume * 1e-6); // cm³ -> m³
             
-            if (!isNaN(totalLoss_W)) {
+            if (!isNaN(totalLoss_W) && isFinite(totalLoss_W)) {
                 this.elements.resultDiv.innerHTML = `
                     <strong>Result:</strong> 
                     Power Density (Pᵥ): <strong>${(Pv_Wm3 / 1000).toExponential(3)}</strong> kW/m³ | 
@@ -137,7 +142,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const f_range = Array.from({ length: 30 }, (_, i) => 10 + i * (500 - 10) / 29); // 10 to 500 kHz
             const B_range = Array.from({ length: 30 }, (_, i) => 10 + i * (300 - 10) / 29); // 10 to 300 mT
             
-            // [FIX] 현재 선택된 모델로 Z 데이터 계산
             const z_data = f_range.map(f => 
                 B_range.map(B => {
                     const pv = this.calculatePv(f, B, model, params);
@@ -149,17 +153,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = [{
                 z: z_data, x: B_range, y: f_range, type: 'surface',
                 colorscale: isDarkMode ? 'Cividis' : 'Viridis',
-                colorbar: { title: 'log10(W/m³)' }
+                colorbar: { title: 'log10(W/m³)', titleside: 'right' }
             }];
 
             const layout = {
-                title: 'Core Loss Pᵥ vs. Frequency and Flux Density',
+                title: 'Core Loss Pᵥ vs. Frequency & Flux Density',
                 scene: {
                     xaxis: { title: 'Bₚₖ (mT)' },
                     yaxis: { title: 'Frequency (kHz)' },
                     zaxis: { title: 'log10(Pᵥ W/m³)' }
                 },
-                paper_bgcolor: isDarkMode ? 'var(--card)' : 'var(--card)',
+                paper_bgcolor: 'transparent',
+                plot_bgcolor: 'transparent',
                 font: { color: 'var(--text-primary)' },
                 margin: { l: 0, r: 0, b: 0, t: 40 }
             };
@@ -170,4 +175,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
     App.init();
 });
-
